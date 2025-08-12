@@ -41,8 +41,6 @@ const ACTORS = [
 ];
 
 let idx = 0;
-  prepareOrder();
-  prepareOrder();
 let score = 0;
 
 const el = {
@@ -82,36 +80,15 @@ function show(actor){
   el.name.textContent = actor.name;
 }
 
-
-function shuffleActors(){
-  for(let i = ACTORS.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [ACTORS[i], ACTORS[j]] = [ACTORS[j], ACTORS[i]];
-  }
-}
-
-let order = [];
-function prepareOrder(){
-  order = Array.from({length: ACTORS.length}, (_, i) => i);
-  shuffleActors();
-}
-
-
 function next(){
-  if(!__order || __order.length === 0){
-    prepareOrder();
-  }
-  idx = __order.pop();
+  idx = (idx + 1) % ACTORS.length;
   show(ACTORS[idx]);
 }
-
-
 
 function start(){
   el.title.classList.add("hidden");
   el.game.classList.remove("hidden");
   idx = 0;
-  prepareOrder();
   score = 0;
   el.score.textContent = 'Score: ' + score;
   show(ACTORS[idx]);
@@ -238,3 +215,20 @@ function enableControls(){
 
 el.start.addEventListener("click", start);
 enableControls();
+
+
+// --- Reshuffle when loop wraps to the beginning ---
+if (typeof window.__origNext__wrapper === 'undefined') {
+  window.__origNext__wrapper = true;
+  if (typeof window.next === 'function') {
+    const __origNext = window.next;
+    window.next = function(){
+      const prevIdx = (typeof idx !== 'undefined') ? idx : null;
+      __origNext();
+      if (typeof idx !== 'undefined' && idx === 0) {
+        __shuffleInPlace(ACTORS);
+      }
+    }
+  }
+}
+
